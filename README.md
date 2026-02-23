@@ -14,7 +14,7 @@ Single IRC network, async-native (asyncio + aiohttp), flat-file database compati
 pip install aiohttp
 
 # 1. Copy and edit the config
-cp config.toml.example config.toml  # already exists as config.toml
+cp config.toml.example config.toml
 
 # 2. First-run setup (creates admin account)
 python main.py --setup
