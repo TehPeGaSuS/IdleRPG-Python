@@ -1,0 +1,59 @@
+# IdleRPG Python Bot Configuration
+
+[bot]
+owner        = "YourNick"          # Owner account name (cannot be de-admined)
+owner_add_only   = true           # Only owner can use MKADMIN
+owner_del_only   = true           # Only owner can use DELADMIN
+
+db_file      = "irpg.db"          # Player database file
+events_file  = "events.txt"       # Events/quests/godsends/calamities file
+mods_file    = "modifiers.txt"    # Log of game events
+quest_file   = "questinfo.txt"    # Written quest state file
+
+rpbase       = 600                # Base seconds to level 1
+rpstep       = 1.16               # TTL = rpbase * (rpstep ^ level)
+rppenstep    = 1.14               # Penalty = pen * (rppenstep ^ level)
+self_clock   = 3                  # Internal tick in seconds (must divide 60)
+limit_pen    = 604800             # Max penalty per event (0 = unlimited)
+
+mapx         = 500                # Map width
+mapy         = 500                # Map height
+
+do_ban          = false            # Kick/ban non-idle users posting URLs
+ok_urls         = []              # URL substrings exempt from ban
+noccodes        = true            # Disallow control codes in names
+nononp          = true            # Disallow non-printable chars in names
+casematters     = true            # Username registration is case-sensitive
+detect_splits   = true            # Detect netsplits, do not penalize
+splitwait       = 900             # Seconds to wait for split users to return
+voice_on_login  = true            # +v users on login
+send_userlist   = true            # Report auto-logged-in users on reconnect
+allow_userinfo  = true            # Allow INFO command for non-admins
+noscale         = false           # Use old (non-scaled) event probability
+silent_mode     = 0               # 0=all 1=no chanmsg 2=no privmsg 3=none
+reconnect       = true            # Reconnect on disconnect
+reconnect_wait  = 60             # Seconds between reconnect attempts
+
+help_url        = "https://example.com/help"
+admin_comm_url  = "https://example.com/admincomms.txt"
+map_url         = "https://example.com/map"              # URL to live quest map, or leave empty
+
+[web]
+host         = "0.0.0.0"
+port         = 8080
+rate_window  = 60                 # Seconds per rate-limit window
+rate_limit   = 60                 # Max requests per window per IP
+
+[network]
+name     = "PTirc"
+host     = "irc.ptirc.org"
+port     = 6697
+channel  = "#idlerpg"
+nick     = "IdleRPGbot"
+use_ssl  = true
+ident_cmd = "PRIVMSG NickServ :IDENTIFY passwordhere"
+bot_modes = "+ix"
+op_cmd    = ""
+ghost_cmd = ""
+realname  = "IdleRPG Python Bot"
+username  = "idlerpg"
