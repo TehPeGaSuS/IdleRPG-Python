@@ -44,9 +44,12 @@ python main.py
 
 | URL | Description |
 |---|---|
-| `/` | Leaderboard of all players |
-| `/player/<name>` | Detailed player stats, items, penalties |
-| `/quest` | Active quest status |
+| `/` | Home — welcome, how to play, top 3 players |
+| `/players` | Full player list with status and item sums |
+| `/player/<n>` | Player profile: stats, mini-map, items, penalties |
+| `/map` | World map — all players as blue/red dots, hover for name |
+| `/quest` | Active quest status and quester positions |
+| `/admin` | Admin command reference |
 
 ## Bot Commands (send via `/msg BotNick <command>`)
 
