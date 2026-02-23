@@ -98,7 +98,18 @@ idlerpg/
 
 ## Database Compatibility
 
-The flat-file format is **tab-delimited**, identical to the original Perl bot's `.db` file (32 columns per player row). You can migrate an existing database directly — the only difference is that passwords are re-hashed using SHA-256 on first `LOGIN` (the old `crypt()` hashes won't verify, so players will need a `CHPASS` reset).
+The flat-file format is **tab-delimited**, identical to the original Perl bot's `.db` file (32 columns per player row). You can drop an existing database in directly with no conversion step.
+
+### Password migration
+
+The original Perl bot stores passwords as `crypt()` hashes (DES, MD5 `$1$`, SHA-256 `$5$`, or SHA-512 `$6$` depending on the system). This port uses its own `sha256$salt$digest` format, but **handles legacy hashes transparently**:
+
+- On `LOGIN`, if the stored hash is a legacy `crypt()` hash, the bot verifies it using Python's `crypt` module.
+- If the password is correct, the hash is **silently upgraded** to SHA-256 in-place and saved on the next DB write.
+- Players notice nothing — they log in as normal and are never asked to reset their password.
+- After the first successful login, the legacy hash is gone and `crypt` is never used for that account again.
+
+> **Python 3.13+ note:** The `crypt` module was removed in Python 3.13. If you run on 3.13+, install the [`legacycrypt`](https://pypi.org/project/legacycrypt/) drop-in replacement (`pip install legacycrypt`) and change the import in `db/models.py` from `import crypt` to `import legacycrypt as crypt`. New installs with no legacy database are unaffected.
 
 ## Events File Format
 

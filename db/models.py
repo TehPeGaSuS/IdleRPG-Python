@@ -44,10 +44,29 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(password: str, stored: str) -> bool:
+    """Verify a password against a stored hash.
+
+    Supports:
+      - sha256$salt$digest  — our native format
+      - $1$..., $5$..., $6$..., $2b$... — crypt() hashes from the original Perl bot
+      - bare 13-char DES crypt() hashes
+    Returns True if the password matches.
+    """
     if stored.startswith("sha256$"):
         _, salt, digest = stored.split("$", 2)
         return hashlib.sha256((salt + password).encode()).hexdigest() == digest
-    return False
+
+    # Legacy crypt() hash from the original Perl bot — verify and signal for upgrade
+    try:
+        import crypt as _crypt
+        return _crypt.crypt(password, stored) == stored
+    except Exception:
+        return False
+
+
+def is_legacy_hash(stored: str) -> bool:
+    """Return True if the stored hash is a legacy crypt() hash that should be upgraded."""
+    return not stored.startswith("sha256$")
 
 
 @dataclass

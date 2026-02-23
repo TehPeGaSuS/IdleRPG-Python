@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Bot runtime files
+config.toml
+*.db
+*.dbbackup/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

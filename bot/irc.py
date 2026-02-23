@@ -10,7 +10,7 @@ from collections import defaultdict
 from typing import Dict, List, Optional
 
 from config import Config
-from db.models import Player, hash_password, verify_password, ITEM_SLOTS
+from db.models import Player, hash_password, verify_password, is_legacy_hash, ITEM_SLOTS
 from db.store import PlayerDB
 from game.engine import GameEngine, duration
 
@@ -473,6 +473,9 @@ class IRCBot:
             elif not verify_password(lpass, lp.password):
                 await nreply("Wrong password.")
             else:
+                # Transparently upgrade legacy crypt() hashes to SHA-256 on login
+                if is_legacy_hash(lp.password):
+                    lp.password = hash_password(lpass)
                 if self.bot_cfg.voice_on_login:
                     await self._raw(f"MODE {self.net.channel} +v :{usernick}")
                 lp.online = True
