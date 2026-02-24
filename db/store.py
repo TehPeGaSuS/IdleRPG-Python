@@ -85,8 +85,12 @@ class PlayerDB:
                 except ValueError as exc:
                     log.error("loaddb line %d: %s", lineno, exc)
                     continue
-                if p.online:
-                    prev_online[f"{p.nick}!{p.userhost}"] = p.username
+                if p.online and p.userhost:
+                    # Key by user@host only — nick may change between sessions
+                    uh = p.userhost  # stored as nick!user@host or user@host
+                    if "!" in uh:
+                        uh = uh.split("!", 1)[1]   # strip nick prefix if present
+                    prev_online[uh] = p.username
                 p.online = False          # mark offline until WHO confirms
                 self._players[p.username] = p
 

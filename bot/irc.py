@@ -285,12 +285,15 @@ class IRCBot:
                 who_user = parts[4]
                 who_host = parts[5]
                 self.onchan[who_nick] = int(time.time())
-                key = f"{who_nick}!{who_user}@{who_host}"
-                if key in self.prev_online:
-                    uname = self.prev_online[key]
+                userhost = f"{who_user}@{who_host}"
+                # Match on user@host only — nick may differ on reconnect
+                uname = self.prev_online.get(userhost)
+                if uname:
                     p = self.db.get(uname)
                     if p:
                         p.online = True
+                        p.nick   = who_nick
+                        p.userhost = f"{who_nick}!{userhost}"
                         self.auto_login[uname] = True
 
         elif cmd == "join":
@@ -305,6 +308,22 @@ class IRCBot:
                     await self._raw(cmd_str)
                 if self.engine:
                     self.engine.last_tick = int(time.time())
+            else:
+                # Auto-login returning player if user@host matches their stored host
+                join_prefix = parts[0][1:]  # nick!user@host
+                if "!" in join_prefix:
+                    join_uh = join_prefix.split("!", 1)[1]  # user@host
+                    p = self._find_by_userhost(join_uh)
+                    if p and not p.online:
+                        p.online   = True
+                        p.nick     = usernick
+                        p.userhost = join_prefix
+                        if self.bot_cfg.voice_on_login:
+                            await self._raw(f"MODE {self.net.channel} +v :{usernick}")
+                        await self._chanmsg(
+                            f"{p.username}, the level {p.level} {p.char_class}, "
+                            f"has reconnected and been automatically logged in from nick {usernick}. "
+                            f"Next level in {duration(p.next_ttl)}.")
 
         elif cmd == "quit":
             if usernick == self.primnick:
@@ -784,3 +803,14 @@ class IRCBot:
     # ------------------------------------------------------------------
     def online_players(self):
         return self.db.online_players()
+
+    def _find_by_userhost(self, userhost: str):
+        """Return the Player whose stored user@host matches, or None.
+        Strips nick prefix from stored userhost if present."""
+        for p in self.db.players.values():
+            uh = p.userhost
+            if "!" in uh:
+                uh = uh.split("!", 1)[1]
+            if uh == userhost:
+                return p
+        return None

@@ -20,18 +20,18 @@ if TYPE_CHECKING:
 STYLE = """<style>
 *{box-sizing:border-box}
 body{font-family:'Courier New',monospace;background:#0d0d1a;color:#c9d1d9;margin:0;padding:0;min-height:100vh}
-header{background:#161b22;padding:10px 28px;border-bottom:2px solid #e94560;display:flex;align-items:center;gap:24px}
-header h1{margin:0;color:#e94560;font-size:1.4em;letter-spacing:3px;white-space:nowrap}
+header{background:#161b22;padding:10px 16px;border-bottom:2px solid #e94560;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+header h1{margin:0;color:#e94560;font-size:1.3em;letter-spacing:2px;white-space:nowrap}
 nav{display:flex;gap:4px;flex-wrap:wrap}
-nav a{color:#8b949e;text-decoration:none;padding:5px 12px;border-radius:4px;font-size:0.9em;border:1px solid transparent;transition:all .15s}
+nav a{color:#8b949e;text-decoration:none;padding:5px 10px;border-radius:4px;font-size:0.85em;border:1px solid transparent;transition:all .15s}
 nav a:hover,nav a.active{color:#e94560;border-color:#e94560}
-main{padding:28px;max-width:1100px;margin:0 auto}
+main{padding:16px;max-width:1100px;margin:0 auto}
 h2{color:#a8dadc;border-bottom:1px solid #21262d;padding-bottom:8px;margin-top:0}
 h3{color:#8b949e;margin-bottom:8px}
 table{border-collapse:collapse;width:100%}
-th{background:#161b22;color:#8b949e;padding:8px 14px;text-align:left;font-weight:normal;font-size:.85em;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid #21262d}
-td{padding:7px 14px;border-bottom:1px solid #161b22;font-size:.9em}
-td.lbl{color:#8b949e;width:160px;white-space:nowrap}
+th{background:#161b22;color:#8b949e;padding:8px 10px;text-align:left;font-weight:normal;font-size:.8em;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid #21262d}
+td{padding:6px 10px;border-bottom:1px solid #161b22;font-size:.85em;word-break:break-word}
+td.lbl{color:#8b949e;width:140px;white-space:nowrap}
 tr:hover td{background:#1a1f27}
 a{color:#58a6ff;text-decoration:none}
 a:hover{text-decoration:underline}
@@ -39,24 +39,29 @@ a:hover{text-decoration:underline}
 .online{color:#3fb950}
 .offline{color:#484f58}
 .good{color:#3fb950}.evil{color:#e94560}.neutral{color:#8b949e}
-.card{background:#161b22;border:1px solid #21262d;border-radius:8px;padding:20px;margin-bottom:20px}
+.card{background:#161b22;border:1px solid #21262d;border-radius:8px;padding:16px;margin-bottom:20px}
 .card p{margin:6px 0}
-.label{color:#8b949e;display:inline-block;min-width:140px;font-size:.85em}
-.cmd{background:#161b22;border:1px solid #21262d;border-radius:6px;padding:16px 20px;margin-bottom:12px}
-.cmd code{color:#e94560;font-size:1em}
+.label{color:#8b949e;display:inline-block;min-width:130px;font-size:.85em}
+.cmd{background:#161b22;border:1px solid #21262d;border-radius:6px;padding:14px 16px;margin-bottom:12px}
+.cmd code{color:#e94560;font-size:.95em}
 .cmd .desc{color:#8b949e;font-size:.85em;margin-top:4px}
 .cmd .example{color:#58a6ff;font-size:.8em;margin-top:4px}
-canvas{display:block;border:1px solid #21262d;border-radius:6px;cursor:crosshair}
+canvas{display:block;max-width:100%;height:auto;border:1px solid #21262d;border-radius:6px;cursor:crosshair}
 .map-legend{display:flex;gap:16px;margin-top:8px;font-size:.8em;color:#8b949e;flex-wrap:wrap}
 .map-legend span{display:flex;align-items:center;gap:5px}
 .map-legend i{display:inline-block;width:10px;height:10px;border-radius:50%}
-footer{text-align:center;color:#484f58;padding:28px;font-size:.8em;border-top:1px solid #161b22;margin-top:40px}
+footer{text-align:center;color:#484f58;padding:20px;font-size:.8em;border-top:1px solid #161b22;margin-top:40px}
 .ts{color:#484f58;font-size:.75em;float:right;clear:both}
 .noquest{text-align:center;padding:60px 20px;color:#484f58}
 .noquest .icon{font-size:3em;margin-bottom:12px}
-.profile-grid{display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start;margin-bottom:24px}
-.stats-items-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
-@media(max-width:720px){.profile-grid{grid-template-columns:1fr}.stats-items-grid{grid-template-columns:1fr}}
+.profile-grid{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start;margin-bottom:24px}
+.stats-items-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:720px){
+  main{padding:10px}
+  .profile-grid{grid-template-columns:1fr}
+  .stats-items-grid{grid-template-columns:1fr}
+  td.lbl{width:110px}
+}
 </style>"""
 
 NAV_LINKS = [
@@ -80,6 +85,7 @@ def _page(title: str, body: str, active: str = "/") -> web.Response:
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{html.escape(title)} – IdleRPG</title>
   {STYLE}
 </head>
@@ -157,7 +163,7 @@ def _map_canvas(canvas_id: str, width: int, height: int,
     """Return a <canvas> + <script> block that draws the world map."""
     hl = highlight_name.replace("\\", "\\\\").replace('"', '\\"')
     return f"""
-<canvas id="{canvas_id}" width="{width}" height="{height}" style="display:block;border:1px solid #21262d;border-radius:6px"></canvas>
+<canvas id="{canvas_id}" width="{width}" height="{height}" style="border:1px solid #21262d;border-radius:6px"></canvas>
 <script>
 (function(){{
   var canvas = document.getElementById('{canvas_id}');
@@ -223,6 +229,7 @@ def _map_canvas(canvas_id: str, width: int, height: int,
   bgImg.onload = function() {{
     ctx.drawImage(bgImg, 0, 0, W, H);
     drawDots();
+    {'var rect = canvas.getBoundingClientRect(); window.scrollTo({top: rect.top + window.scrollY + rect.height/2 - window.innerHeight/2, behavior: "instant"});' if canvas_id == "worldmap" else ''}
   }};
   bgImg.onerror = function() {{
     ctx.fillStyle = '#1a1f2e';
@@ -529,8 +536,10 @@ def make_app(db: "PlayerDB", engine: "GameEngine", wcfg,
             f"<td><strong>{_pen(pen_total)}</strong></td></tr>"
         )
 
-#        host = p.userhost or "—"
-        host = f"{p.nick}!{p.userhost}" if p.userhost else "—"
+        uh = p.userhost or ""
+        if uh and "!" not in uh:
+            uh = f"{p.nick}!{uh}"
+        host = uh or "—"
 
         body = f"""
 <h2>View Stats ({html.escape(p.username)}
