@@ -52,6 +52,10 @@ class BotConfig:
     mapy: int = 500
 
     do_ban: bool = True
+    do_topic: bool = False
+    topic_interval: int = 3        # hours between topic updates
+    do_top_announce: bool = False
+    top_announce_interval: int = 3  # hours between top-players announcements
     ok_urls: List[str] = field(default_factory=list)
     noccodes: bool = True
     nononp: bool = True

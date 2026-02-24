@@ -197,6 +197,20 @@ class IRCBot:
                     if self.net.ghost_cmd:
                         await self._raw(self.net.ghost_cmd)
                     await self._raw(f"NICK {self.primnick}")
+            # topic / top-players announcement
+            if self.engine:
+                topic_secs = self.bot_cfg.topic_interval * 3600
+                topic_ticks = max(1, topic_secs // self.bot_cfg.self_clock)
+                ann_secs = self.bot_cfg.top_announce_interval * 3600
+                ann_ticks = max(1, ann_secs // self.bot_cfg.self_clock)
+                rp = self.engine.rpreport
+                if rp > 0:
+                    if self.bot_cfg.do_topic and rp % topic_ticks == 0:
+                        await self._set_topic()
+                    if self.bot_cfg.do_top_announce and rp % ann_ticks == 0:
+                        top = self._top3_string()
+                        if top:
+                            await self._chanmsg(f"IdleRPG Top Players: {top}")
             # pause warning
             if self.engine and self.engine.rpreport % 600 == 0 and self.pause_mode:
                 await self._chanmsg("WARNING: Cannot write database in PAUSE mode!")
@@ -798,11 +812,39 @@ class IRCBot:
         self.prev_online = {}
         self.auto_login = {}
 
+        if self.bot_cfg.do_topic or self.bot_cfg.do_top_announce:
+            asyncio.get_event_loop().call_later(10, lambda: asyncio.ensure_future(self._startup_top()))
+
     # ------------------------------------------------------------------
     # Misc helpers
     # ------------------------------------------------------------------
     def online_players(self):
         return self.db.online_players()
+
+    async def _startup_top(self):
+        if self.bot_cfg.do_topic:
+            await self._set_topic()
+        if self.bot_cfg.do_top_announce:
+            top = self._top3_string()
+            if top:
+                await self._chanmsg(f"IdleRPG Top Players: {top}")
+
+    async def _set_topic(self):
+        top = self._top3_string()
+        if top:
+            await self._raw(f"TOPIC {self.net.channel} :IdleRPG Top Players: {top}")
+
+    def _top3_string(self) -> str:
+        """Return a formatted string of the top 3 players by level then idled time."""
+        medals = ["🥇", "🥈", "🥉"]
+        players = sorted(
+            self.db.players.values(),
+            key=lambda p: (-p.level, p.next_ttl),
+        )[:3]
+        if not players:
+            return ""
+        parts = [f"{medals[i]} {p.username} (lvl {p.level})" for i, p in enumerate(players)]
+        return ", ".join(parts)
 
     def _find_by_userhost(self, userhost: str):
         """Return the Player whose stored user@host matches, or None.

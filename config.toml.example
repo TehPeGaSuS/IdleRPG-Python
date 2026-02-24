@@ -1,7 +1,7 @@
 # IdleRPG Python Bot Configuration
 
 [bot]
-owner        = "YourNick"          # Owner account name (cannot be de-admined)
+owner        = "TestUser"          # Owner account name (cannot be de-admined)
 owner_add_only   = true           # Only owner can use MKADMIN
 owner_del_only   = true           # Only owner can use DELADMIN
 
@@ -33,6 +33,10 @@ noscale         = false           # Use old (non-scaled) event probability
 silent_mode     = 0               # 0=all 1=no chanmsg 2=no privmsg 3=none
 reconnect       = true            # Reconnect on disconnect
 reconnect_wait  = 60             # Seconds between reconnect attempts
+do_topic              = true    # TOPIC IdleRPG Top Players: 🥇 A, 🥈 B, 🥉 C
+topic_interval        = 4       # hours
+do_top_announce       = true    # same string sent to channel
+top_announce_interval = 4       # hours (can differ from topic interval)
 
 help_url        = "https://example.com/help"
 admin_comm_url  = "https://example.com/admincomms.txt"

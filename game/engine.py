@@ -728,20 +728,6 @@ class GameEngine:
                 self.quest.clear()
                 self.quest.qtime = now + 21600
 
-        # Top players report every 10 hours
-        if self.rpreport and self.rpreport % 36000 == 0:
-            ranked = sorted(
-                self.db.players.values(),
-                key=lambda p: (-p.level, p.next_ttl)
-            )
-            if ranked:
-                self._msg("Idle RPG Top Players:")
-            for i, p in enumerate(ranked[:3]):
-                self._msg(
-                    f"{p.username}, the level {p.level} {p.char_class}, "
-                    f"is #{i+1}! Next level in {duration(p.next_ttl)}.")
-            self.db.backup()
-
         # Challenge every 20 min when 15%+ are level 45+
         if self.rpreport % 1200 == 0 and self.rpreport:
             high_level = [u for u, p in self.db.players.items()
