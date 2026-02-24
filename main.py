@@ -78,7 +78,7 @@ async def main_async(cfg):
     await asyncio.sleep(0.5)
 
     from aiohttp import web
-    app = make_app(db, bot.engine, cfg.web, channel=cfg.network.channel)
+    app = make_app(db, bot.engine, cfg.web, cfg.network, channel=cfg.network.channel)
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, cfg.web.host, cfg.web.port)

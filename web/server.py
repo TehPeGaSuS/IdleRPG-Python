@@ -344,7 +344,7 @@ class RateLimiter:
 # ---------------------------------------------------------------------------
 
 def make_app(db: "PlayerDB", engine: "GameEngine", wcfg,
-             channel: str = "#idlerpg") -> web.Application:
+             netcfg=None, channel: str = "#idlerpg") -> web.Application:
     limiter = RateLimiter(wcfg.rate_window, wcfg.rate_limit)
 
     @web.middleware
@@ -379,6 +379,22 @@ def make_app(db: "PlayerDB", engine: "GameEngine", wcfg,
             f"{top_rows}</table>"
         ) if top_rows else ""
 
+        # Build "Where to play" from network config if available
+        if netcfg:
+            scheme = "ircs" if getattr(netcfg, "use_ssl", True) else "irc"
+            chan_fragment = netcfg.channel.lstrip("#")
+            irc_url = f"{scheme}://{netcfg.host}:{netcfg.port}/{chan_fragment}"
+            where_section = (
+                f'<h2>Where to Play?</h2>'
+                f'<div class="card"><p>'
+                f'IdleRPG can be played on <a href="{html.escape(irc_url)}">{html.escape(netcfg.name)}</a> '
+                f'in the channel <strong>{html.escape(netcfg.channel)}</strong> — '
+                f'our bot is <strong>{html.escape(netcfg.nick)}</strong>.'
+                f'</p></div>'
+            )
+        else:
+            where_section = ""
+
         body = f"""
 <h2>Welcome to Idle RPG</h2>
 <div class="card">
@@ -388,6 +404,8 @@ def make_app(db: "PlayerDB", engine: "GameEngine", wcfg,
   parting, or quitting all add <em>penalty time</em> to your clock.</p>
   <p><span class="label">Players online:</span> <span class="online">{online}</span> / {total}</p>
 </div>
+
+{where_section}
 
 {top_section}
 <br/>
