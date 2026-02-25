@@ -97,6 +97,11 @@ class GameEngine:
         self.pause_mode: bool = False
         self.silent_mode: int = cfg.silent_mode
         self.last_tick: int = 1         # 1 = not yet connected
+        # Re-derive from DB in case bot restarted mid-round-end
+        self.round_end_pending: bool = bool(cfg.reset_on_level) and any(
+            p.level >= cfg.reset_on_level for p in db.players.values()
+        )
+        self.round_just_reset: bool = False
 
     # ------------------------------------------------------------------
     # Announce / notice wrappers
@@ -459,6 +464,37 @@ class GameEngine:
             self._msg(f"{me.username} reaches next level in {duration(me.next_ttl)}.")
 
     # ------------------------------------------------------------------
+    # Round end
+    # ------------------------------------------------------------------
+
+    def _do_round_end(self, primnick: str):
+        """Announce top 3, record HoF, reset all players for a new round."""
+        ranked = sorted(
+            self.db.players.values(),
+            key=lambda p: (-p.level, p.next_ttl),
+        )[:3]
+
+        top3 = [{"username": p.username, "char_class": p.char_class, "level": p.level}
+                for p in ranked]
+        round_num = self.db.append_hof(top3)
+
+        medals = ["1st", "2nd", "3rd"]
+        places = ", ".join(
+            f"{medals[i]} place: {p['username']}" for i, p in enumerate(top3)
+        )
+        self._msg(f"Round {round_num} is over! {places}. A new round begins!")
+
+        # Reset all players
+        for p in self.db.players.values():
+            p.reset_for_new_round()
+
+        self.quest.clear()
+        self.rpreport = 0
+        self.round_end_pending = False
+        self.round_just_reset = True  # signal bot to issue WHO
+        log.info("Round %d ended. All players reset.", round_num)
+
+    # ------------------------------------------------------------------
     # Quests
     # ------------------------------------------------------------------
 
@@ -744,11 +780,22 @@ class GameEngine:
                     if p.next_ttl < 1:
                         p.level += 1
                         p.next_ttl = self._level_ttl(p.level)
-                        self._msg(
-                            f"{p.username}, the {p.char_class}, has attained level {p.level}! "
-                            f"Next level in {duration(p.next_ttl)}.")
+                        reset_level = self.cfg.reset_on_level
+                        is_round_end = (reset_level and p.level >= reset_level
+                                        and not self.round_end_pending)
+                        if not is_round_end:
+                            self._msg(
+                                f"{p.username}, the {p.char_class}, has attained level {p.level}! "
+                                f"Next level in {duration(p.next_ttl)}.")
                         self.find_item(p.username)
                         self.challenge_opp(p.username, primnick)
+                        if is_round_end:
+                            self.round_end_pending = True
+                            log.info("Round end triggered by %s reaching level %d", p.username, p.level)
+
+        # Round end: fire once quest is over (or immediately if no quest active)
+        if self.round_end_pending and not self.quest.is_active():
+            self._do_round_end(primnick)
 
         self.rpreport += clock
         self.last_tick = now

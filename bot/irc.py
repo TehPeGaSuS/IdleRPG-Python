@@ -186,6 +186,15 @@ class IRCBot:
                         await self.db.async_save()
                 except Exception as exc:
                     log.exception("tick error: %s", exc)
+            # round just reset — re-run WHO so players get auto-logged in
+            if self.engine and self.engine.round_just_reset:
+                self.engine.round_just_reset = False
+                self.prev_online = {
+                    (p.userhost.split("!", 1)[1] if "!" in p.userhost else p.userhost): p.username
+                    for p in self.db.players.values() if p.userhost
+                }
+                await self._raw(f"WHO {self.net.channel}")
+                await self.db.async_save()
             # check ban expirations every tick
             if self.bans and self.engine and self.engine.rpreport % 1200 == 0:
                 while self.bans:

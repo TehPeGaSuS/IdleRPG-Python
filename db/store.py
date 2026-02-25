@@ -1,11 +1,12 @@
 """Synchronous (but asyncio-safe) player database backed by the tab-delimited flat file."""
 from __future__ import annotations
 import asyncio
+import json
 import logging
 import shutil
 import time
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from .models import DB_HEADER, Player, ITEM_SLOTS
 
@@ -17,8 +18,45 @@ class PlayerDB:
 
     def __init__(self, db_path: str):
         self.path = Path(db_path)
+        self.hof_path = self.path.with_name("hof.json")
         self._players: Dict[str, Player] = {}
         self._lock = asyncio.Lock()
+        self._hof: List[dict] = self._load_hof()
+
+    def _load_hof(self) -> List[dict]:
+        if self.hof_path.exists():
+            try:
+                with open(self.hof_path, encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception as exc:
+                log.error("hof load failed: %s", exc)
+        return []
+
+    def save_hof(self) -> None:
+        try:
+            with open(self.hof_path, "w", encoding="utf-8") as f:
+                json.dump(self._hof, f, indent=2)
+        except Exception as exc:
+            log.error("hof save failed: %s", exc)
+
+    def append_hof(self, top3: list) -> int:
+        """Record a completed round. Returns the new round number."""
+        round_num = len(self._hof) + 1
+        self._hof.append({
+            "round":  round_num,
+            "ended":  int(time.time()),
+            "top3":   top3,   # list of {username, char_class, level}
+        })
+        self.save_hof()
+        return round_num
+
+    @property
+    def hof(self) -> List[dict]:
+        return self._hof
+
+    @property
+    def round_number(self) -> int:
+        return len(self._hof) + 1
 
     # ------------------------------------------------------------------
     # Public helpers (all sync-safe, called from the bot's async context

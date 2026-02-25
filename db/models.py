@@ -101,6 +101,19 @@ class Player:
 
     alignment: str = "n"  # n=neutral, g=good, e=evil
 
+    def reset_for_new_round(self):
+        """Reset all gameplay stats for a new round, keeping account credentials."""
+        self.level    = 0
+        self.next_ttl = 600
+        self.idled    = 0
+        self.x        = 0
+        self.y        = 0
+        self.pen_mesg = self.pen_nick = self.pen_part = 0
+        self.pen_kick = self.pen_quit = self.pen_quest = self.pen_logout = 0
+        self.items    = {s: "0" for s in ITEM_SLOTS}
+        self.alignment = "n"
+        self.online   = False
+
     def item_sum(self, battle: bool = False) -> int:
         total = sum(int(v) for v in self.items.values())
         if battle:

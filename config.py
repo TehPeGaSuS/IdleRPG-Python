@@ -52,6 +52,7 @@ class BotConfig:
     mapy: int = 500
 
     do_ban: bool = True
+    reset_on_level: int = 0          # reset game at this level (0 = disabled)
     do_topic: bool = False
     topic_interval: int = 3        # hours between topic updates
     do_top_announce: bool = False

@@ -20,10 +20,11 @@ mapx         = 500                # Map width
 mapy         = 500                # Map height
 
 do_ban          = false            # Kick/ban non-idle users posting URLs
+reset_on_level  = 50             # Reset game when a player reaches this level (0 = disabled, no HoF), at level 50, it's approximately 3 months of game
 do_topic        = false            # Set channel topic with top 3 players (requires op)
-topic_interval  = 3               # Hours between topic updates
+topic_interval  = 4               # Hours between topic updates
 do_top_announce = false            # Announce top 3 players in channel
-top_announce_interval = 3         # Hours between top-player announcements
+top_announce_interval = 4         # Hours between top-player announcements
 ok_urls         = []              # URL substrings exempt from ban
 noccodes        = true            # Disallow control codes in names
 nononp          = true            # Disallow non-printable chars in names

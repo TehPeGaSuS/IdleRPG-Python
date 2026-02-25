@@ -69,6 +69,7 @@ NAV_LINKS = [
     ("/players", "Player List"),
     ("/map",     "World Map"),
     ("/quest",   "Quest Info"),
+    ("/hof",     "Hall of Fame"),
     ("/admin",   "Admin Commands"),
 ]
 
@@ -353,7 +354,7 @@ class RateLimiter:
 # ---------------------------------------------------------------------------
 
 def make_app(db: "PlayerDB", engine: "GameEngine", wcfg,
-             netcfg=None, channel: str = "#idlerpg") -> web.Application:
+             netcfg=None, botcfg=None, channel: str = "#idlerpg") -> web.Application:
     limiter = RateLimiter(wcfg.rate_window, wcfg.rate_limit)
 
     @web.middleware
@@ -745,11 +746,44 @@ Admin access is required for all commands on this page.</p>
     # -----------------------------------------------------------------------
     # Routes
     # -----------------------------------------------------------------------
+    async def hof_page(request):
+        reset_level = getattr(botcfg, "reset_on_level", 0) if botcfg else 0
+        rounds = list(reversed(db.hof))  # most recent first
+        if not reset_level:
+            body = '<div class="noquest"><div class="icon">🏆</div><p>This game doesn\'t reset — no Hall of Fame.</p></div>'
+        elif not rounds:
+            body = '<div class="noquest"><div class="icon">🏆</div><p>No completed rounds yet.</p></div>'
+        else:
+            medals = ["🥇", "🥈", "🥉"]
+            rows = ""
+            for r in rounds:
+                ended = time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime(r["ended"]))
+                top = r.get("top3", [])
+                places = " &nbsp; ".join(
+                    f"{medals[i]} {html.escape(p['username'])} "
+                    f"<span style='color:#484f58;font-size:.85em'>lvl {p['level']} {html.escape(p['char_class'])}</span>"
+                    for i, p in enumerate(top)
+                )
+                rows += (
+                    f"<tr><td>Round {r['round']}</td>"
+                    f"<td>{ended}</td>"
+                    f"<td>{places}</td></tr>"
+                )
+            body = (
+                f"<h2>Hall of Fame</h2>"
+                f"<table>"
+                f"<tr><th>Round</th><th>Ended</th><th>Top 3</th></tr>"
+                f"{rows}"
+                f"</table>"
+            )
+        return _page("Hall of Fame", body, "/hof")
+
     app.router.add_get("/",              home)
     app.router.add_get("/players",       player_list)
     app.router.add_get("/player/{name}", player_detail)
     app.router.add_get("/map",           world_map)
     app.router.add_get("/quest",         quest_page)
+    app.router.add_get("/hof",           hof_page)
     app.router.add_get("/admin",         admin_page)
     app.router.add_static("/static",     pathlib.Path(__file__).parent)
 
