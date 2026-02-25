@@ -314,6 +314,7 @@ class IRCBot:
                         p.online = True
                         p.nick   = who_nick
                         p.userhost = f"{who_nick}!{userhost}"
+                        p.last_login = int(time.time())
                         self.auto_login[uname] = True
 
         elif cmd == "join":
@@ -336,9 +337,10 @@ class IRCBot:
                     join_uh = join_prefix.split("!", 1)[1]  # user@host
                     p = self._find_by_userhost(join_uh)
                     if p and not p.online:
-                        p.online   = True
-                        p.nick     = usernick
-                        p.userhost = join_prefix
+                        p.online     = True
+                        p.nick       = usernick
+                        p.userhost   = join_prefix
+                        p.last_login = int(time.time())
                         if self.bot_cfg.voice_on_login:
                             await self._raw(f"MODE {self.net.channel} +v :{usernick}")
                         await self._chanmsg(

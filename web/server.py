@@ -121,7 +121,15 @@ def _pen(secs: int) -> str:
         return "None"
     return _duration(secs)
 
+def _fmt_ts(ts: int) -> str:
+    t = time.localtime(ts)
+    d = t.tm_mday
+    suffix = "th" if 11 <= d <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(d % 10, "th")
+    return time.strftime(f"%a {d}{suffix} %b %Y at %H:%M:%S", t)
+
 def _align(a: str) -> str:
+    return {"g": "<span class='good'>Good</span>",
+            "e": "<span class='evil'>Evil</span>"}.get(a, "<span class='neutral'>Neutral</span>")
     cls   = {"g": "good", "e": "evil"}.get(a, "neutral")
     label = {"g": "Good", "e": "Evil", "n": "Neutral"}.get(a, "Neutral")
     return f'<span class="{cls}">{label}</span>'
@@ -572,8 +580,8 @@ def make_app(db: "PlayerDB", engine: "GameEngine", wcfg,
     <tr><td class="lbl">Next Level</td><td>{_duration(p.next_ttl)}</td></tr>
     <tr><td class="lbl">Status</td><td>{_status(p.online)}</td></tr>
     <tr><td class="lbl">Host</td><td>{html.escape(host)}</td></tr>
-    <tr><td class="lbl">Account Created</td><td>{time.strftime('%a %dst %b %Y a %H:%M:%S', time.localtime(p.created))}</td></tr>
-    <tr><td class="lbl">Last Login</td><td>{time.strftime('%a %dst %b %Y a %H:%M:%S', time.localtime(p.last_login))}</td></tr>
+    <tr><td class="lbl">Account Created</td><td>{_fmt_ts(p.created)}</td></tr>
+    <tr><td class="lbl">Last Login</td><td>{_fmt_ts(p.last_login)}</td></tr>
     <tr><td class="lbl">Total Time Idled</td><td>{_duration(p.idled)}</td></tr>
     <tr><td class="lbl">Current Position</td><td>{p.x}, {p.y}</td></tr>
     <tr><td class="lbl">Alignment</td><td>{_align(p.alignment)}</td></tr>
