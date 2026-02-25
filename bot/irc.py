@@ -35,6 +35,7 @@ class IRCBot:
         self._in_bytes: int = 0
 
         self.onchan: Dict[str, int] = {}    # nick -> join timestamp
+        self._has_op: bool = False
         self.split: Dict[str, dict] = {}    # nick!user@host -> {time, account}
         self.bans: List[str] = []           # pending ban removals
 
@@ -206,8 +207,13 @@ class IRCBot:
                 rp = self.engine.rpreport
                 if rp > 0:
                     if self.bot_cfg.do_topic and rp % topic_ticks == 0:
-                        await self._set_topic()
-                    if self.bot_cfg.do_top_announce and rp % ann_ticks == 0:
+                        if self._has_op:
+                            await self._set_topic()
+                        elif self.bot_cfg.do_top_announce:
+                            top = self._top3_string()
+                            if top:
+                                await self._chanmsg(f"IdleRPG Top Players: {top}")
+                    elif self.bot_cfg.do_top_announce and not self.bot_cfg.do_topic and rp % ann_ticks == 0:
                         top = self._top3_string()
                         if top:
                             await self._chanmsg(f"IdleRPG Top Players: {top}")
@@ -316,6 +322,7 @@ class IRCBot:
             if self.bot_cfg.detect_splits and f"{parts[0][1:]}" in self.split:
                 del self.split[parts[0][1:]]
             elif usernick == self.bot_nick:
+                self._has_op = False
                 await self._raw(f"WHO {self.net.channel}")
                 if self.net.op_cmd:
                     cmd_str = self.net.op_cmd.replace("%botnick%", self.bot_nick)
@@ -375,6 +382,23 @@ class IRCBot:
             if kicked_username and self.engine:
                 self.engine.penalize(kicked_username, "kick", primnick=self.primnick)
             self.onchan.pop(kicked, None)
+
+        elif cmd == "mode":
+            # Track whether the bot has op on the channel
+            if len(parts) >= 4 and parts[2].lower() == self.net.channel.lower():
+                modestr = parts[3]
+                targets = parts[4:]
+                adding = True
+                ti = 0
+                for ch in modestr:
+                    if ch == '+':
+                        adding = True
+                    elif ch == '-':
+                        adding = False
+                    elif ch == 'o':
+                        if ti < len(targets) and targets[ti] == self.bot_nick:
+                            self._has_op = adding
+                        ti += 1
 
         elif cmd == "notice" and len(parts) > 2 and parts[2] != self.bot_nick:
             msg_len = max(0, len(" ".join(parts[3:])) - 1)
@@ -822,9 +846,9 @@ class IRCBot:
         return self.db.online_players()
 
     async def _startup_top(self):
-        if self.bot_cfg.do_topic:
+        if self.bot_cfg.do_topic and self._has_op:
             await self._set_topic()
-        if self.bot_cfg.do_top_announce:
+        elif self.bot_cfg.do_top_announce:
             top = self._top3_string()
             if top:
                 await self._chanmsg(f"IdleRPG Top Players: {top}")

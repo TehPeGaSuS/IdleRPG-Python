@@ -215,12 +215,13 @@ def _map_canvas(canvas_id: str, width: int, height: int,
       ctx.fill(); ctx.stroke();
 
       if (isHL) {{
-        ctx.fillStyle    = '#000000';
-        ctx.font         = 'bold 11px monospace';
+        ctx.font = 'bold 11px monospace';
         var tw = ctx.measureText(p.name).width;
-        ctx.fillRect(cx + 10, cy - 10, tw + 6, 16);
+        var lx = (cx + 10 + tw + 6 > W) ? cx - tw - 16 : cx + 10;
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(lx, cy - 10, tw + 6, 16);
         ctx.fillStyle = '#f7c948';
-        ctx.fillText(p.name, cx + 13, cy + 2);
+        ctx.fillText(p.name, lx + 3, cy + 2);
       }}
     }}
   }}
