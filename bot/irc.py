@@ -36,6 +36,7 @@ class IRCBot:
 
         self.onchan: Dict[str, int] = {}    # nick -> join timestamp
         self._has_op: bool = False
+        self._last_topic: str = ""
         self.split: Dict[str, dict] = {}    # nick!user@host -> {time, account}
         self.bans: List[str] = []           # pending ban removals
 
@@ -221,11 +222,17 @@ class IRCBot:
                         elif self.bot_cfg.do_top_announce:
                             top = self._top3_string()
                             if top:
-                                await self._chanmsg(f"IdleRPG Top Players: {top}")
+                                new_top = f"IdleRPG Top Players: {top}"
+                                if new_top != self._last_topic:
+                                    self._last_topic = new_top
+                                    await self._chanmsg(new_top)
                     elif self.bot_cfg.do_top_announce and not self.bot_cfg.do_topic and rp % ann_ticks == 0:
                         top = self._top3_string()
                         if top:
-                            await self._chanmsg(f"IdleRPG Top Players: {top}")
+                            new_top = f"IdleRPG Top Players: {top}"
+                            if new_top != self._last_topic:
+                                self._last_topic = new_top
+                                await self._chanmsg(new_top)
             # pause warning
             if self.engine and self.engine.rpreport % 600 == 0 and self.pause_mode:
                 await self._chanmsg("WARNING: Cannot write database in PAUSE mode!")
@@ -333,6 +340,7 @@ class IRCBot:
                 del self.split[parts[0][1:]]
             elif usernick == self.bot_nick:
                 self._has_op = False
+                self._last_topic = ""
                 await self._raw(f"WHO {self.net.channel}")
                 if self.net.op_cmd:
                     cmd_str = self.net.op_cmd.replace("%botnick%", self.bot_nick)
@@ -867,7 +875,10 @@ class IRCBot:
     async def _set_topic(self):
         top = self._top3_string()
         if top:
-            await self._raw(f"TOPIC {self.net.channel} :IdleRPG Top Players: {top}")
+            new_topic = f"IdleRPG Top Players: {top}"
+            if new_topic != self._last_topic:
+                self._last_topic = new_topic
+                await self._raw(f"TOPIC {self.net.channel} :{new_topic}")
 
     def _top3_string(self) -> str:
         """Return a formatted string of the top 3 players by level then idled time."""
