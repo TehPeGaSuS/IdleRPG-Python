@@ -20,7 +20,7 @@ mapx         = 500                # Map width
 mapy         = 500                # Map height
 
 do_ban          = false            # Kick/ban non-idle users posting URLs
-reset_on_level  = 100             # Reset game when a player reaches this level (0 = disabled, no HoF)
+reset_on_level  = 50             # Reset game when a player reaches this level (0 = disabled, no HoF)
 do_topic        = false            # Set channel topic with top 3 players (requires op)
 topic_interval  = 3               # Hours between topic updates
 do_top_announce = false            # Announce top 3 players in channel
