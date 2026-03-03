@@ -115,7 +115,7 @@ class Player:
         self.online   = False
 
     def item_sum(self, battle: bool = False) -> int:
-        total = sum(int(v) for v in self.items.values())
+        total = sum(int("".join(c for c in v if c.isdigit()) or "0") for v in self.items.values())
         if battle:
             if self.alignment == "g":
                 total = int(total * 1.1)
